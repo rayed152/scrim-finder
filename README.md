@@ -1,36 +1,59 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Valorant Scrim Finder MVP
 
-## Getting Started
+A full-stack web application designed for Valorant players to easily find and queue up for scrims against other teams of similar skill.
 
-First, run the development server:
+## 🚀 Tech Stack
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+- **Framework**: Next.js 16 (App Router)
+- **Database**: PostgreSQL
+- **ORM**: Prisma
+- **Auth**: NextAuth.js (Auth.js v5) - Credentials Provider
+- **Realtime / Matchmaking**: Socket.IO integrated with a custom Node.js server
+- **Styling**: Tailwind CSS
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 📋 Features
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- **Authentication**: Sign up and login using Email & Password. Protected dashboard routes.
+- **Team Management**: Create a team as Captain, or join an existing team via Team ID. Leave teams, and view the roster + ranks.
+- **Matchmaking Engine**: Queue up your team. A background loop continuously runs on the server looking for matched teams.
+- **Fair Matches**: Matchmaking compares Average Rank Scores and expands the search threshold the longer you wait.
+- **Realtime UI**: Receive instantaneous updates when a match is found using Socket.IO without refreshing the page.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 🛠️ Local Development Setup
 
-## Learn More
+1. **Install Dependencies**
+   ```bash
+   npm install
+   ```
 
-To learn more about Next.js, take a look at the following resources:
+2. **Environment Variables**
+   Ensure you have your `.env` file configured. Example provided in the repo.
+   ```env
+   NEXTAUTH_SECRET="your-super-secret-key"
+   NEXTAUTH_URL="http://localhost:3000"
+   DATABASE_URL="postgresql://user:password@localhost:5432/scrim_finder?schema=public"
+   ```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+3. **Database Setup**
+   Ensure your local PostgreSQL database is running. Then, push the schema to the database:
+   ```bash
+   npx prisma db push
+   ```
+   *(Optional) You can run `npx tsx prisma/seed.ts` to populate the DB with a dummy team and users.*
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+4. **Start the Development Server**
+   Since the app uses a custom server for Socket.IO (`server.js`), use the dev script which runs the node server:
+   ```bash
+   npm run dev
+   ```
+   The app will be available at `http://localhost:3000`.
 
-## Deploy on Vercel
+## 🧠 How Matchmaking Works
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+The matchmaking system avoids relying on stateless Next.js serverless functions hitting execution limits. Instead, the application runs via a custom `server.js` Node instance.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. **The Queue Action**: When a Captain clicks "Enter Queue", the `/api/queue` endpoint creates a `QueueEntry` record in Postgres with the team's average rank score and preferred server region.
+2. **The Engine Loop**: `server.js` contains a `setInterval` loop that runs every 5 seconds. It fetches all `QueueEntry` records.
+3. **Filtering**: Entries are grouped by their Server Region (e.g. US West).
+4. **Skill Matching & Time Expansion**: For every team in the queue, it compares their `avgRankScore` to others. The default allowed rank difference threshold is `2` (e.g. Diamond 1 can match with Diamond 3). However, for every 30 seconds a team waits, the threshold expands by `1`.
+5. **Real-time Dispatch**: When a match is found, the server deletes both queue entries, creates a `Match` record, and emits a `matchFound` event via `Socket.IO` directly to the `team_[teamId]` room so both captains instantly get the match notification on their screen.

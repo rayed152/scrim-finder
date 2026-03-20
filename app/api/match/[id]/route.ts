@@ -1,0 +1,139 @@
+import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+import { auth } from "@/auth";
+
+export async function GET(
+  req: NextRequest,
+  { params }: { params: { id: string } },
+) {
+  const { id: matchId } = await params;
+
+  try {
+    const match = await prisma.match.findUnique({
+      where: { id: matchId },
+      include: {
+        team1: {
+          include: {
+            members: {
+              include: {
+                user: {
+                  select: {
+                    name: true,
+                    valorantTag: true,
+                    discordId: true,
+                    rank: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+        team2: {
+          include: {
+            members: {
+              include: {
+                user: {
+                  select: {
+                    name: true,
+                    valorantTag: true,
+                    discordId: true,
+                    rank: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!match) {
+      return NextResponse.json({ message: "Match not found" }, { status: 404 });
+    }
+
+    return NextResponse.json(match);
+  } catch (error) {
+    console.error("Match Fetch Error:", error);
+    return NextResponse.json(
+      { message: "Internal server error" },
+      { status: 500 },
+    );
+  }
+}
+
+export async function PATCH(
+  req: NextRequest,
+  { params }: { params: { id: string } },
+) {
+  const { id: matchId } = await params;
+  const session = await auth();
+  
+  if (!session?.user) {
+    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+  }
+
+  try {
+    const match = await prisma.match.findUnique({
+      where: { id: matchId },
+      include: {
+        team1: { select: { members: { select: { userId: true } } } },
+        team2: { select: { members: { select: { userId: true } } } },
+      },
+    });
+
+    if (!match) {
+      return NextResponse.json({ message: "Match not found" }, { status: 404 });
+    }
+
+    const isMemberOfTeam1 = match.team1.members.some(m => m.userId === session.user.id);
+    const isMemberOfTeam2 = match.team2.members.some(m => m.userId === session.user.id);
+
+    if (!isMemberOfTeam1 && !isMemberOfTeam2) {
+      return NextResponse.json({ message: "Access denied" }, { status: 403 });
+    }
+
+    const updatedMatch = await prisma.match.update({
+      where: { id: matchId },
+      data: { status: "completed" },
+      include: {
+        team1: {
+          include: {
+            members: {
+              include: {
+                user: {
+                  select: {
+                    name: true,
+                    valorantTag: true,
+                    discordId: true,
+                    rank: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+        team2: {
+          include: {
+            members: {
+              include: {
+                user: {
+                  select: {
+                    name: true,
+                    valorantTag: true,
+                    discordId: true,
+                    rank: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    return NextResponse.json(updatedMatch);
+  } catch (error) {
+    console.error("End Match Error:", error);
+    return NextResponse.json({ message: "Internal server error" }, { status: 500 });
+  }
+}
