@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { revalidatePath } from 'next/cache'
 import { LogOut } from 'lucide-react'
 import ProfileUpdateForm from '@/components/ProfileUpdateForm'
+import { calculateAverageRank, getRankName } from '@/lib/valorant'
 
 export default async function DashboardPage() {
   const session = await auth()
@@ -30,6 +31,7 @@ export default async function DashboardPage() {
   })
 
   const team = membership?.team || null
+  const avgRankScore = team ? calculateAverageRank(team.members.map((m: any) => m.user.rank)) : null
 
   return (
     <div className="min-h-screen bg-neutral-950 flex flex-col">
@@ -84,10 +86,16 @@ export default async function DashboardPage() {
                 <div className="flex items-center justify-between mb-6">
                   <div>
                     <h2 className="text-2xl font-bold text-white">{team.name}</h2>
-                    <p className="text-sm text-neutral-400 flex items-center gap-2 mt-1">
-                      <span className="w-2 h-2 rounded-full bg-green-500"></span>
-                      Region: {team.server}
-                    </p>
+                    <div className="flex flex-col gap-1 mt-2">
+                      <p className="text-sm text-neutral-400 flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-green-500"></span>
+                        Region: {team.server}
+                      </p>
+                      <p className="text-sm text-neutral-400 flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-blue-500"></span>
+                        Avg Rank: <strong className="text-white">{getRankName(avgRankScore)}</strong>
+                      </p>
+                    </div>
                   </div>
                   <Link href="/team" className="px-4 py-2 border border-neutral-700 rounded-md text-sm font-medium hover:bg-neutral-800 transition">
                     Manage Roster

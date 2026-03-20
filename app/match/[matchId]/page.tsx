@@ -38,6 +38,13 @@ export default function MatchRoomPage({ params }: { params: Promise<{ matchId: s
   const [loading, setLoading] = useState(true)
   const [ending, setEnding] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [copied, setCopied] = useState(false)
+
+  const copyLink = () => {
+    navigator.clipboard.writeText(window.location.href)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
 
   const endMatch = async () => {
     if (!confirm('Are you sure you want to end this match? This will mark the scrim as completed for both teams.')) return
@@ -126,9 +133,17 @@ export default function MatchRoomPage({ params }: { params: Promise<{ matchId: s
             <h1 className="text-4xl font-black uppercase tracking-tighter italic">
               Match <span className="text-red-500">Room</span>
             </h1>
-            <p className="text-neutral-500 mt-1 font-mono text-xs uppercase tracking-widest">
-              ID: {match.id} • Server: {match.server}
-            </p>
+            <div className="flex items-center gap-3 mt-2">
+              <button 
+                onClick={copyLink}
+                className="px-3 py-1 bg-neutral-900 border border-neutral-700 hover:bg-neutral-800 text-xs font-bold text-neutral-300 uppercase tracking-widest rounded transition flex items-center gap-2"
+              >
+                {copied ? '✓ Copied!' : '🔗 Copy Match Link'}
+              </button>
+              <p className="text-neutral-500 font-mono text-xs uppercase tracking-widest">
+                Server: {match.server}
+              </p>
+            </div>
           </div>
           
           <div className="bg-neutral-900 border border-neutral-800 px-6 py-3 rounded-xl flex items-center gap-4">

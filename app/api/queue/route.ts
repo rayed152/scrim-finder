@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { auth } from '@/auth'
 import { prisma } from '@/lib/prisma'
+import { calculateAverageRank } from '@/lib/valorant'
 
 export async function POST(req: Request) {
   try {
@@ -39,11 +40,8 @@ export async function POST(req: Request) {
     }
 
     // Calculate Average Rank
-    const ranks = team.members.map((m: any) => m.user.rank).filter((r: any) => r !== null) as number[]
-    const avgRankScore = ranks.length > 0 
-      ? ranks.reduce((acc, curr) => acc + curr, 0) / ranks.length
-      : 10 // Default to midway rank if no ranks exist e.g. Gold 1
-
+    const ranks = team.members.map((m: any) => m.user.rank)
+    const avgRankScore = calculateAverageRank(ranks)
     // Add to queue
     const queueEntry = await prisma.queueEntry.create({
       data: {

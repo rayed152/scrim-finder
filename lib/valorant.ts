@@ -37,6 +37,14 @@ export function getRankValue(name: string): number | null {
   return rank ? rank.value : null
 }
 
+export function calculateAverageRank(ranks: (number | null)[]): number {
+  const validRanks = ranks.filter((r): r is number => r !== null && r !== undefined);
+  if (validRanks.length === 0) return 10; // Default to Gold 1
+  
+  const sum = validRanks.reduce((acc, curr) => acc + curr, 0);
+  return Math.round(sum / validRanks.length);
+}
+
 export const VALORANT_SERVERS = [
   'US West',
   'US East',

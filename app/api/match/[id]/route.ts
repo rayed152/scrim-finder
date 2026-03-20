@@ -7,6 +7,11 @@ export async function GET(
   { params }: { params: { id: string } },
 ) {
   const { id: matchId } = await params;
+  
+  const session = await auth();
+  if (!session?.user?.id) {
+    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+  }
 
   try {
     const match = await prisma.match.findUnique({
@@ -49,6 +54,13 @@ export async function GET(
 
     if (!match) {
       return NextResponse.json({ message: "Match not found" }, { status: 404 });
+    }
+
+    const isMemberOfTeam1 = match.team1.members.some((m: any) => m.userId === session.user.id);
+    const isMemberOfTeam2 = match.team2.members.some((m: any) => m.userId === session.user.id);
+
+    if (!isMemberOfTeam1 && !isMemberOfTeam2) {
+      return NextResponse.json({ message: "Access denied. You are not a participant in this match." }, { status: 403 });
     }
 
     return NextResponse.json(match);

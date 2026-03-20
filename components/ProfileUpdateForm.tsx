@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { VALORANT_RANKS, getRankName } from '@/lib/valorant'
 
 interface ProfileUpdateFormProps {
   initialValorantTag?: string | null
@@ -61,8 +62,8 @@ export default function ProfileUpdateForm({
           </button>
         </div>
         <div>
-          <p className="text-xs text-neutral-500 uppercase tracking-wider font-semibold">Rank ID</p>
-          <p className="inline-block px-3 py-1 bg-neutral-800 text-white rounded-md mt-1 text-sm">{initialRank || 'Unranked'}</p>
+          <p className="text-xs text-neutral-500 uppercase tracking-wider font-semibold">Rank</p>
+          <p className="inline-block px-3 py-1 bg-neutral-800 text-white rounded-md mt-1 text-sm">{getRankName(initialRank)}</p>
         </div>
         <div>
           <p className="text-xs text-neutral-500 uppercase tracking-wider font-semibold">Discord ID</p>
@@ -89,15 +90,17 @@ export default function ProfileUpdateForm({
           />
         </div>
         <div>
-          <label className="text-xs text-neutral-500 uppercase tracking-wider font-semibold block mb-1">Rank (Numeric 0-27)</label>
-          <input 
-            type="number"
-            min="0"
-            max="27"
+          <label className="text-xs text-neutral-500 uppercase tracking-wider font-semibold block mb-1">Rank</label>
+          <select 
             value={formData.rank}
             onChange={e => setFormData({ ...formData, rank: e.target.value })}
             className="w-full bg-neutral-800 border border-neutral-700 rounded-md px-3 py-2 text-sm text-white focus:border-red-500 outline-none transition"
-          />
+          >
+            <option value="">Unranked</option>
+            {VALORANT_RANKS.map(r => (
+              <option key={r.value} value={r.value}>{r.name}</option>
+            ))}
+          </select>
         </div>
         <div>
           <label className="text-xs text-neutral-500 uppercase tracking-wider font-semibold block mb-1">Discord ID</label>

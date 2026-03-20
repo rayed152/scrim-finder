@@ -38,6 +38,11 @@ export async function POST(req: Request) {
           data: { captainId: otherMembers[0].userId }
         })
       } else {
+        // Delete team members first to satisfy foreign key constraints
+        await prisma.teamMember.deleteMany({
+          where: { teamId: team.id }
+        })
+        
         // Delete team since it's empty
         await prisma.team.delete({
           where: { id: team.id }
