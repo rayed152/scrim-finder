@@ -19,35 +19,6 @@ A full-stack web application designed for Valorant players to easily find and qu
 - **Fair Matches**: Matchmaking compares Average Rank Scores and expands the search threshold the longer you wait.
 - **Realtime UI**: Receive instantaneous updates when a match is found using Socket.IO without refreshing the page.
 
-## 🛠️ Local Development Setup
-
-1. **Install Dependencies**
-   ```bash
-   npm install
-   ```
-
-2. **Environment Variables**
-   Ensure you have your `.env` file configured. Example provided in the repo.
-   ```env
-   NEXTAUTH_SECRET="your-super-secret-key"
-   NEXTAUTH_URL="http://localhost:3000"
-   DATABASE_URL="postgresql://user:password@localhost:5432/scrim_finder?schema=public"
-   ```
-
-3. **Database Setup**
-   Ensure your local PostgreSQL database is running. Then, push the schema to the database:
-   ```bash
-   npx prisma db push
-   ```
-   *(Optional) You can run `npx tsx prisma/seed.ts` to populate the DB with a dummy team and users.*
-
-4. **Start the Development Server**
-   Since the app uses a custom server for Socket.IO (`server.js`), use the dev script which runs the node server:
-   ```bash
-   npm run dev
-   ```
-   The app will be available at `http://localhost:3000`.
-
 ## 🧠 How Matchmaking Works
 
 The matchmaking system avoids relying on stateless Next.js serverless functions hitting execution limits. Instead, the application runs via a custom `server.js` Node instance.
