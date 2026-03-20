@@ -3,25 +3,6 @@ import Link from 'next/link'
 export default function LandingPage() {
   return (
     <div className="flex flex-col min-h-screen">
-      <header className="px-6 py-4 flex items-center justify-between border-b border-neutral-800 bg-neutral-950/50 backdrop-blur-md sticky top-0 z-50">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded bg-red-500 flex items-center justify-center">
-            <span className="font-bold text-white">V</span>
-          </div>
-          <span className="text-xl font-bold bg-gradient-to-r from-red-500 to-rose-400 bg-clip-text text-transparent">
-            Scrim Finder
-          </span>
-        </div>
-        <nav className="flex items-center gap-4">
-          <Link href="/login" className="text-sm font-medium text-neutral-300 hover:text-white transition-colors">
-            Sign In
-          </Link>
-          <Link href="/register" className="px-4 py-2 text-sm font-medium text-white bg-red-500 rounded-md hover:bg-red-600 transition-colors shadow-lg shadow-red-500/20">
-            Get Started
-          </Link>
-        </nav>
-      </header>
-
       <main className="flex-1 flex flex-col items-center justify-center text-center px-4 max-w-4xl mx-auto py-24">
         <h1 className="text-5xl md:text-7xl font-bold tracking-tight mb-6">
           Find your next Valorant scrim <span className="text-red-500">instantly</span>.

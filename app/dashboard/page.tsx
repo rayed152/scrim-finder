@@ -1,9 +1,8 @@
-import { auth, signOut } from '@/auth'
+import { auth } from '@/auth'
 import { prisma } from '@/lib/prisma'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { revalidatePath } from 'next/cache'
-import { LogOut } from 'lucide-react'
 import ProfileUpdateForm from '@/components/ProfileUpdateForm'
 import { calculateAverageRank, getRankName } from '@/lib/valorant'
 
@@ -35,23 +34,6 @@ export default async function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-neutral-950 flex flex-col">
-      <header className="px-6 py-4 flex items-center justify-between border-b border-neutral-800 bg-neutral-900/50">
-        <div className="flex items-center gap-4">
-          <span className="text-xl font-bold bg-gradient-to-r from-red-500 to-rose-400 bg-clip-text text-transparent">Dashboard</span>
-        </div>
-        <div className="flex items-center gap-4">
-          <span className="text-sm font-medium text-neutral-300">{user.name}</span>
-          <form action={async () => {
-            'use server';
-            await signOut();
-          }}>
-            <button type="submit" className="p-2 text-neutral-400 hover:text-white bg-neutral-800 rounded-md transition-colors flex">
-              <LogOut size={16} />
-            </button>
-          </form>
-        </div>
-      </header>
-
       <main className="flex-1 p-6 max-w-6xl mx-auto w-full grid grid-cols-1 lg:grid-cols-3 gap-6">
         
         {/* User Card */}
