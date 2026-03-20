@@ -137,6 +137,31 @@ app.prepare().then(() => {
     }
   }, MATCHMAKING_INTERVAL_MS);
 
+  // Set up Match Auto-Completion background task
+  const AUTO_COMPLETE_INTERVAL_MS = 60000; // Run every minute
+
+  setInterval(async () => {
+    try {
+      const matchTimeout = new Date(Date.now() - 90 * 60 * 1000); // 1 hour 30 mins ago
+      
+      const updatedMatches = await prisma.match.updateMany({
+        where: {
+          status: "pending",
+          createdAt: { lt: matchTimeout },
+        },
+        data: {
+          status: "completed",
+        },
+      });
+
+      if (updatedMatches.count > 0) {
+        console.log(`Auto-completed ${updatedMatches.count} matches older than 1h 30m`);
+      }
+    } catch (e) {
+      console.error("Auto-completion error:", e);
+    }
+  }, AUTO_COMPLETE_INTERVAL_MS);
+
   httpServer
     .once("error", (err) => {
       console.error(err);

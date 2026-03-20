@@ -7,7 +7,7 @@ export async function GET(
   { params }: { params: { id: string } },
 ) {
   const { id: matchId } = await params;
-  
+
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
@@ -56,11 +56,28 @@ export async function GET(
       return NextResponse.json({ message: "Match not found" }, { status: 404 });
     }
 
-    const isMemberOfTeam1 = match.team1.members.some((m: any) => m.userId === session.user.id);
-    const isMemberOfTeam2 = match.team2.members.some((m: any) => m.userId === session.user.id);
+    // Auto-complete match if it's older than 1 hour 30 mins (90 * 60 * 1000 ms)
+    const matchTimeout = new Date(Date.now() - 90 * 60 * 1000);
+    if (match.status === "pending" && match.createdAt < matchTimeout) {
+      await prisma.match.update({
+        where: { id: matchId },
+        data: { status: "completed" },
+      });
+      match.status = "completed";
+    }
+
+    const isMemberOfTeam1 = match.team1.members.some(
+      (m: any) => m.userId === session.user.id,
+    );
+    const isMemberOfTeam2 = match.team2.members.some(
+      (m: any) => m.userId === session.user.id,
+    );
 
     if (!isMemberOfTeam1 && !isMemberOfTeam2) {
-      return NextResponse.json({ message: "Access denied. You are not a participant in this match." }, { status: 403 });
+      return NextResponse.json(
+        { message: "Access denied. You are not a participant in this match." },
+        { status: 403 },
+      );
     }
 
     return NextResponse.json(match);
@@ -79,7 +96,7 @@ export async function PATCH(
 ) {
   const { id: matchId } = await params;
   const session = await auth();
-  
+
   if (!session?.user) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
@@ -97,8 +114,12 @@ export async function PATCH(
       return NextResponse.json({ message: "Match not found" }, { status: 404 });
     }
 
-    const isMemberOfTeam1 = match.team1.members.some(m => m.userId === session.user.id);
-    const isMemberOfTeam2 = match.team2.members.some(m => m.userId === session.user.id);
+    const isMemberOfTeam1 = match.team1.members.some(
+      (m) => m.userId === session.user.id,
+    );
+    const isMemberOfTeam2 = match.team2.members.some(
+      (m) => m.userId === session.user.id,
+    );
 
     if (!isMemberOfTeam1 && !isMemberOfTeam2) {
       return NextResponse.json({ message: "Access denied" }, { status: 403 });
@@ -146,6 +167,9 @@ export async function PATCH(
     return NextResponse.json(updatedMatch);
   } catch (error) {
     console.error("End Match Error:", error);
-    return NextResponse.json({ message: "Internal server error" }, { status: 500 });
+    return NextResponse.json(
+      { message: "Internal server error" },
+      { status: 500 },
+    );
   }
 }

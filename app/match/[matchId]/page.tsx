@@ -39,6 +39,7 @@ export default function MatchRoomPage({ params }: { params: Promise<{ matchId: s
   const [ending, setEnding] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
+  const [timeLeft, setTimeLeft] = useState<string>('')
 
   const copyLink = () => {
     navigator.clipboard.writeText(window.location.href)
@@ -87,6 +88,36 @@ export default function MatchRoomPage({ params }: { params: Promise<{ matchId: s
       fetchMatch()
     }
   }, [matchId])
+
+  useEffect(() => {
+    if (!match || match.status === 'completed') return;
+
+    const limitMs = 90 * 60 * 1000; // 1 hour 30 mins
+    const createdAtTime = new Date(match.createdAt).getTime();
+
+    const updateTimer = () => {
+      const now = Date.now();
+      const elapsed = now - createdAtTime;
+      const remaining = limitMs - elapsed;
+
+      if (remaining <= 0) {
+        setTimeLeft('00:00:00');
+        setMatch(prev => prev ? { ...prev, status: 'completed' } : null);
+      } else {
+        const h = Math.floor(remaining / 3600000);
+        const m = Math.floor((remaining % 3600000) / 60000);
+        const s = Math.floor((remaining % 60000) / 1000);
+        setTimeLeft(
+          `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`
+        );
+      }
+    };
+
+    updateTimer(); // Initial call
+    const interval = setInterval(updateTimer, 1000);
+
+    return () => clearInterval(interval);
+  }, [match?.status, match?.createdAt]);
 
   if (loading) {
     return (
@@ -158,6 +189,15 @@ export default function MatchRoomPage({ params }: { params: Promise<{ matchId: s
               <span className="text-[10px] uppercase text-neutral-500 font-bold tracking-widest">Created</span>
               <span className="text-white font-medium text-sm">{new Date(match.createdAt).toLocaleTimeString()}</span>
             </div>
+            {match.status !== 'completed' && timeLeft && (
+              <>
+                <div className="w-px h-8 bg-neutral-800"></div>
+                <div className="flex flex-col">
+                  <span className="text-[10px] uppercase text-neutral-500 font-bold tracking-widest">Auto-Ends In</span>
+                  <span className="text-red-500 font-bold font-mono text-sm">{timeLeft}</span>
+                </div>
+              </>
+            )}
           </div>
 
           {match.status !== 'completed' && (
