@@ -1,7 +1,14 @@
 import { auth } from "@/auth";
 import Link from "next/link";
 import { LogoutButton } from "./LogoutButton";
-import { LayoutDashboard, Users, LogIn, UserPlus, History } from "lucide-react";
+import {
+  LayoutDashboard,
+  Users,
+  LogIn,
+  UserPlus,
+  History,
+  Shield,
+} from "lucide-react";
 
 export async function Navbar() {
   const session = await auth();
@@ -33,6 +40,16 @@ export async function Navbar() {
                 className="group-hover:text-red-500 transition-colors"
               />
               <span className="hidden md:inline">Dashboard</span>
+            </Link>
+            <Link
+              href="/scrims"
+              className="text-sm font-medium text-neutral-400 hover:text-white transition-colors flex items-center gap-2 group"
+            >
+              <Shield
+                size={16}
+                className="group-hover:text-red-500 transition-colors"
+              />
+              <span className="hidden md:inline">Scrim Board</span>
             </Link>
             <Link
               href="/team"

@@ -56,9 +56,17 @@ export async function GET(
       return NextResponse.json({ message: "Match not found" }, { status: 404 });
     }
 
-    // Auto-complete match if it's older than 1 hour 30 mins (90 * 60 * 1000 ms)
-    const matchTimeout = new Date(Date.now() - 90 * 60 * 1000);
-    if (match.status === "pending" && match.createdAt < matchTimeout) {
+    // Auto-complete match if it's older than 1 hour 30 mins (90 * 60 * 1000 ms) and NOT scheduled
+    const matchTimeout = new Date(Date.now() - 1 * 60 * 1000);
+
+    if (
+      match.isScheduled === false &&
+      match.status === "pending" &&
+      match.createdAt < matchTimeout
+    ) {
+      console.log(
+        `Auto-completing match ${matchId} (Created: ${match.createdAt})`,
+      );
       await prisma.match.update({
         where: { id: matchId },
         data: { status: "completed" },

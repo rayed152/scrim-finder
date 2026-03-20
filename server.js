@@ -44,6 +44,26 @@ app.prepare().then(() => {
     socket.on("disconnect", () => {
       console.log(`Socket disconnected: ${socket.id}`);
     });
+
+    // Scrim Board Events
+    socket.on("scrimPostCreated", () => {
+      socket.broadcast.emit("scrimPostCreated");
+    });
+
+    socket.on("newChallenge", (data) => {
+      if (data.posterTeamId) {
+        io.to(`team_${data.posterTeamId}`).emit("newChallenge", data);
+      }
+    });
+
+    socket.on("challengeAccepted", (data) => {
+      if (data.challengerTeamId) {
+        io.to(`team_${data.challengerTeamId}`).emit("matchFound", {
+          matchId: data.matchId,
+          opponentId: data.posterTeamId,
+        });
+      }
+    });
   });
 
   // Set up Matchmaking background task
@@ -79,16 +99,23 @@ app.prepare().then(() => {
 
         for (let i = 0; i < entries.length; i++) {
           const entryA = entries[i];
-          if (globalMatchedIds.has(entryA.id) || localMatchedIds.has(entryA.id)) continue;
+          if (globalMatchedIds.has(entryA.id) || localMatchedIds.has(entryA.id))
+            continue;
 
           const waitTimeSecs = (Date.now() - entryA.queuedAt.getTime()) / 1000;
           const threshold = BASE_THRESHOLD + Math.floor(waitTimeSecs / 30);
 
           for (let j = i + 1; j < entries.length; j++) {
             const entryB = entries[j];
-            if (globalMatchedIds.has(entryB.id) || localMatchedIds.has(entryB.id)) continue;
+            if (
+              globalMatchedIds.has(entryB.id) ||
+              localMatchedIds.has(entryB.id)
+            )
+              continue;
 
-            const rankDiff = Math.abs(entryA.avgRankScore - entryB.avgRankScore);
+            const rankDiff = Math.abs(
+              entryA.avgRankScore - entryB.avgRankScore,
+            );
 
             if (rankDiff <= threshold) {
               globalMatchedIds.add(entryA.id);
@@ -142,11 +169,12 @@ app.prepare().then(() => {
 
   setInterval(async () => {
     try {
-      const matchTimeout = new Date(Date.now() - 90 * 60 * 1000); // 1 hour 30 mins ago
-      
+      const matchTimeout = new Date(Date.now() - 60 * 1000); // 1 minute
+
       const updatedMatches = await prisma.match.updateMany({
         where: {
           status: "pending",
+          isScheduled: false, // Ensure only queue matches are auto-ended
           createdAt: { lt: matchTimeout },
         },
         data: {
@@ -155,7 +183,9 @@ app.prepare().then(() => {
       });
 
       if (updatedMatches.count > 0) {
-        console.log(`Auto-completed ${updatedMatches.count} matches older than 1h 30m`);
+        console.log(
+          `Auto-completed ${updatedMatches.count} queue matches older than 1 minute`,
+        );
       }
     } catch (e) {
       console.error("Auto-completion error:", e);

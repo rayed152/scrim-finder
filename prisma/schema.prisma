@@ -37,6 +37,8 @@ model Team {
   queueEntry     QueueEntry?
   matchesAsTeam1 Match[]      @relation("MatchTeam1")
   matchesAsTeam2 Match[]      @relation("MatchTeam2")
+  scrimPosts     ScrimPost[]
+  scrimChallenges ScrimChallenge[]
 }
 
 model TeamMember {
@@ -60,6 +62,34 @@ model QueueEntry {
   status       String   @default("searching")
 }
 
+model ScrimPost {
+  id        String   @id @default(cuid())
+  teamId    String
+  team      Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  rank      Int
+  server    String
+  time      String
+  message   String?
+  status    String   @default("active") // active, matched, cancelled
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  challenges ScrimChallenge[]
+}
+
+model ScrimChallenge {
+  id               String    @id @default(cuid())
+  postId           String
+  post             ScrimPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  challengerTeamId String
+  challengerTeam   Team      @relation(fields: [challengerTeamId], references: [id], onDelete: Cascade)
+  status           String    @default("pending") // pending, accepted, declined
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  @@unique([postId, challengerTeamId])
+}
+
 model Match {
   id             String   @id @default(cuid())
   team1Id        String
@@ -69,5 +99,6 @@ model Match {
   server         String
   rankDifference Float
   status         String   @default("pending")
+  isScheduled    Boolean  @default(false)
   createdAt      DateTime @default(now())
 }
